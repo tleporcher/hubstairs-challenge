@@ -10,21 +10,38 @@ class MusicDashboard extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
+      timer: null,
       currentMusic: {
-        title: "No title playing"
+        title: "No title playing",
+        duration_ms: 0,
+        playing: false
       },
+      elapsedTime: 0,
       musicList: MUSIC_LIST,
       playlist: []
     };
     this.addToPlaylist = this.addToPlaylist.bind(this);
     this.removeFromPlaylist = this.removeFromPlaylist.bind(this);
     this.playMusic = this.playMusic.bind(this);
+    this.toggleMusicState = this.toggleMusicState.bind(this);
   }
 
   playMusic(music) {
     this.setState({
       playlist: _.uniqWith([music, ...this.state.playlist], _.isEqual),
-      currentMusic: music
+      currentMusic: { ...music, playing: true }
+    });
+    this.tick();
+  }
+
+  tick() {
+    const timer = setInterval(() => {
+      this.setState({
+        elapsedTime: this.state.elapsedTime + 1000
+      });
+    }, 1000);
+    this.setState({
+      timer
     });
   }
 
@@ -40,11 +57,24 @@ class MusicDashboard extends React.Component {
     });
   }
 
+  toggleMusicState() {
+    this.setState({
+      currentMusic: {
+        ...this.state.currentMusic,
+        playing: !this.state.currentMusic.playing
+      }
+    });
+  }
+
   render() {
     return (
       <div className="music">
         <h1>Music Page</h1>
-        <Player music={this.state.currentMusic} />
+        <Player
+          music={this.state.currentMusic}
+          elapsedTime={this.state.elapsedTime}
+          onToggle={this.toggleMusicState}
+        />
         <Playlist
           list={this.state.playlist}
           onPlay={this.playMusic}
